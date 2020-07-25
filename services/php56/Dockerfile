@@ -1,16 +1,16 @@
 FROM php:5.6.32-fpm
-MAINTAINER lexin "772821140@qq.com"
+MAINTAINER LDT "watshing625@gmail.com"
 
-# 设置时区
-ENV TZ=Asia/Shanghai
+# 設定timezone
+ENV TZ=Asia/Taipei
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-#替换镜像源
+#替換鏡像源
 ENV SOURCELIST_FROM=aliyun
 COPY ./pkg/${SOURCELIST_FROM}_sourcelist /home/sources.list
 RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && mv /home/sources.list /etc/apt/
 
-# 更新安装依赖包和PHP核心拓展
+# 更新安裝依賴包和PHP核心拓展
 RUN apt-get update && apt-get install -y \
         git \
         vim \
@@ -19,9 +19,9 @@ RUN apt-get update && apt-get install -y \
         libfreetype6-dev \
         libjpeg62-turbo-dev \
         libpng-dev \
-		libssl-dev \
-	&& docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
-	&& docker-php-ext-install -j$(nproc) gd \
+        libssl-dev \
+    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-install -j$(nproc) gd \
         && docker-php-ext-install zip \
         && docker-php-ext-install pdo_mysql \
         && docker-php-ext-install opcache \
@@ -29,21 +29,21 @@ RUN apt-get update && apt-get install -y \
         && docker-php-ext-install mysql \
         && rm -r /var/lib/apt/lists/*
 
-# 将预先下载好的拓展包从宿主机拷贝进去
+# 將預先下載好的拓展包從宿主機拷貝進去
 COPY ./pkg/redis.tgz /home/redis.tgz
 COPY ./pkg/libmemcached.tar.gz /home/libmemcached.tar.gz
 COPY ./pkg/memcached-2.2.0.tgz /home/memcached-2.2.0.tgz
 
-# 安装 PECL 拓展，这里我们安装的是Redis
+# 安裝 PECL 拓展，這裡我們安裝的是Redis
 RUN pecl install /home/redis.tgz && echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini
 
-# 安装libmemcached
+# 安裝libmemcached
 RUN tar zxvf /home/libmemcached.tar.gz \
     && cd libmemcached-1.0.18 \
     && ./configure --prefix=/usr/local/libmemcached --with-memcached \
     && make && make install
 
-# 安装memcached
+# 安裝memcached
 RUN tar zxvf /home/memcached-2.2.0.tgz \
     && cd memcached-2.2.0 \
     && phpize \
@@ -53,7 +53,7 @@ RUN tar zxvf /home/memcached-2.2.0.tgz \
 
 
 
-# 安装opencc
+# 安裝opencc
 COPY ./pkg/opencc.tar /home/opencc.tar
 RUN apt-get update && apt-get install -y \
     doxygen \
@@ -64,7 +64,7 @@ RUN tar zxvf /home/opencc.tar \
         && cd OpenCC \
         && make && make install
 
-# 安装opencc4php扩展
+# 安裝opencc4php擴展
 COPY ./pkg/opencc4php.tar /home/opencc4php.tar
 RUN tar zxvf /home/opencc4php.tar \
         && cd opencc4php \
@@ -73,17 +73,17 @@ RUN tar zxvf /home/opencc4php.tar \
         && make && make install \
         && echo "extension=opencc.so" > /usr/local/etc/php/conf.d/opencc.ini
 
-# 安装 Composer
+# 安裝 Composer
 ENV COMPOSER_HOME /root/composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 ENV PATH $COMPOSER_HOME/vendor/bin:$PATH
 
-# 安装memcache
+# 安裝memcache
 RUN pecl install memcache && \
     echo "extension=memcache.so" > /usr/local/etc/php/conf.d/memcache.ini
 
 
-# 删除扩展包
+# 刪除擴展包
 RUN rm -f /home/redis.tgz
 RUN rm -f /home/libmemcached.tar.gz
 RUN rm -f /home/memcached.tgz
@@ -92,27 +92,27 @@ RUN rm -f /home/OpenCC
 
 WORKDIR /data
 
-# 写权限
+# 寫權限
 RUN usermod -u 1000 www-data
 
 
-# 安装额外扩展
+# 安裝額外擴展
 RUN apt-get update && apt-get install -y \
         libmcrypt-dev \
         libxml2-dev \
         && docker-php-ext-install mcrypt bcmath mbstring opcache soap
 
-# 安装xdebug
+# 安裝xdebug
 RUN pecl install xdebug-2.3.3 && \
-    docker-php-ext-enable xdebug 
+    docker-php-ext-enable xdebug
 COPY ./pkg/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
-# 安装gnupg扩展
+# 安裝gnupg擴展
 RUN apt-get install -y libgpgme11-dev &&  pecl install gnupg && echo "extension=gnupg.so" > /usr/local/etc/php/conf.d/gnupg.ini
 
 
 
-# 安装 Swoole
+# 安裝 Swoole
 #RUN cd /home \
 #    && git clone https://gitee.com/swoole/swoole.git \
 #    && cd swoole \
