@@ -64,8 +64,9 @@ services:
         - ../logs/mysql:/var/lib/mysql-logs:rw
         - ./mysql/conf.d:/etc/mysql/conf.d:ro
       environment:
-        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # root密码 自行修改
-        MYSQL_DATABASE: ${MYSQL_DATABASE} # 数据库名
+        # 相關設定可以在.env中設定
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
         MYSQL_USER: ${MYSQL_USER}
         MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       restart: always
