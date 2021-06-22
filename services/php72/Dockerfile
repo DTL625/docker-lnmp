@@ -1,14 +1,14 @@
 FROM php:7.2-fpm
-MAINTAINER LDT "watshing625@gmail.com"
+
 
 # 設定timezone
 ENV TZ=Asia/Taipei
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 #替換鏡像源
-ENV SOURCELIST_FROM=aliyun
-COPY ./pkg/${SOURCELIST_FROM}_sourcelist /home/sources.list
-RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && mv /home/sources.list /etc/apt/
+#ENV SOURCELIST_FROM=aliyun
+#COPY ./pkg/${SOURCELIST_FROM}_sourcelist /home/sources.list
+#RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && mv /home/sources.list /etc/apt/
 
 # 更新安裝依賴包和PHP核心拓展
 RUN apt-get update && apt-get install -y \
@@ -31,25 +31,25 @@ RUN apt-get update && apt-get install -y \
 
 # 將預先下載好的拓展包從宿主機拷貝進去
 COPY ./pkg/redis.tgz /home/redis.tgz
-COPY ./pkg/libmemcached.tar.gz /home/libmemcached.tar.gz
-COPY ./pkg/memcached.tgz /home/memcached.tgz
+#COPY ./pkg/libmemcached.tar.gz /home/libmemcached.tar.gz
+#COPY ./pkg/memcached.tgz /home/memcached.tgz
 
 # 安裝 PECL 拓展，這裡我們安裝的是Redis
 RUN pecl install /home/redis.tgz && echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini
 
 # 安裝libmemcached
-RUN tar zxvf /home/libmemcached.tar.gz \
-    && cd libmemcached-1.0.18 \
-    && ./configure --prefix=/usr/local/libmemcached --with-memcached \
-    && make && make install
-
-# 安裝memcached
-RUN tar zxvf /home/memcached.tgz \
-    && cd memcached-3.0.4 \
-    && phpize \
-    && ./configure -enable-memcached -with-php-config=/usr/local/bin/php-config -with-zlib-dir -with-libmemcached-dir=/usr/local/libmemcached -prefix=/usr/local/phpmemcached -disable-memcached-sasl \
-    && make && make install \
-    && echo "extension=memcached.so" > /usr/local/etc/php/conf.d/memcached.ini
+#RUN tar zxvf /home/libmemcached.tar.gz \
+#    && cd libmemcached-1.0.18 \
+#    && ./configure --prefix=/usr/local/libmemcached --with-memcached \
+#    && make && make install
+#
+## 安裝memcached
+#RUN tar zxvf /home/memcached.tgz \
+#    && cd memcached-3.0.4 \
+#    && phpize \
+#    && ./configure -enable-memcached -with-php-config=/usr/local/bin/php-config -with-zlib-dir -with-libmemcached-dir=/usr/local/libmemcached -prefix=/usr/local/phpmemcached -disable-memcached-sasl \
+#    && make && make install \
+#    && echo "extension=memcached.so" > /usr/local/etc/php/conf.d/memcached.ini
 
 # 安裝 Swoole
 #RUN cd /home \

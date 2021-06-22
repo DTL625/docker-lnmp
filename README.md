@@ -3,10 +3,11 @@
 非常感謝 [jianyan74/lnmp-dockerfiles](https://github.com/jianyan74/lnmp-dockerfiles)項目， 本dockerfile是由jianyan74/lnmp-dockerfiles項目修改後得來。
 
 在原項目基礎上，增加了以下：
-- 增加了環境變量，配置更輕鬆
-- 增加了php5.6.32版本，實現多版本
-- 修改了apt-get源，可使用阿里源或163源，編譯更快速
-- php5.6.32增加了memcache、opencc、opencc4php、xdebug擴展，php7.2如果需要的話，可以拷貝5.6.32dockerfile內的擴展編譯內容到php7.2
+
+- 增加了環境變量，配置更輕鬆 
+- 增加了php5.6.32版本，實現多版本 
+- 修改了apt-get源，可使用阿里源或163源，編譯更快速 
+- php5.6.32增加了memcache、opencc、opencc4php、xdebug擴展，php7.2如果需要的話，可以拷貝  5.6.32dockerfile內的擴展編譯內容到php7.2
 - 預先下載好了編譯包，節約時間
 
 
@@ -23,7 +24,6 @@
 - MySQL 5.7
 - Nginx 1.12
 - Redis 4.0
-- Memcached 1.5
 
 用到的PHP擴展
 - redis
@@ -33,23 +33,21 @@
 - opencc
 - xdebug
 
-#### 目錄
-
-目錄 | 說明
----|---
---- app | 應用安裝目錄
---- data | mongo、mysql數據庫文件存儲
---- docs | 幫助文檔
---- logs | nginx、mongo、mysql、php日誌
---- sercices | 服務軟件配置包
---- --- memcached | memcached配置及安裝文件
---- --- mongo | memcached配置及安裝文件
---- --- mysql | mysql配置及安裝文件
---- --- nginx | nginx配置及安裝文件
---- --- php56 | php5.6.32配置及安裝文件
---- --- php72 | php7.2配置及安裝文件
---- --- redis | redis配置及安裝文件
---- --- docker-composer.yml | docker配置執行文件
+#### 目錄結構
+```
+├── app # 應用安裝目錄 
+├── data # mongo、mysql數據庫文件存儲
+├── docs # 說明文件
+├── logs # log文件：nginx、mongo、mysql、php...etc
+└── services # service配置
+    ├── memcached
+    ├── mongo
+    ├── mysql
+    ├── nginx
+    ├── php56
+    ├── php72
+    └── redis
+```
 
 
 ## 使用
@@ -66,21 +64,24 @@ sudo pip install -U docker-compose
 #### 2.下載docker-lnmp
 直接clone：
 ```
-git clone git@github.com:gitlexin/docker-lnmp.git
+git clone git@github.com:DTL625/docker-lnmp.git
 chmod -R 777 ./docker-lnmp/logs
 cd docker-lnmp/services
 ```
 拷貝.example.env為.env，根據自己的情況修改其中的配置
+```
+cp .env.example .env
+```
 
 #### 3.docker-compose構建項目
-進行docker-compose.yml所在文件夾：
-執行命令：
+切換至docker-compose.yml所在文件夾：
+```
+cd docker_lnmp_root/service
+```
+執行命令，亦可增加參數-d使服務在背景執行：
 ```
 docker-compose up
-```
-
-如果沒問題，下次啓動時可以以守護模式啓用，所有容器將後台運行：
-```
+# or
 docker-compose up -d
 ```
 
@@ -109,13 +110,13 @@ access_log  /var/log/nginx/example.log;
 注意重啓一下nginx容器才能生效
 
 ## 我自己的常用命令
-```
+```php
 # 開啓所有容器
 docker-compose up -d
 # 關閉所有容器
 docker-compose down
-# 重啓某個容器
-docker-compose restart nginx|php-fpm56等service名
+# 啟動|關閉|重啓 某個容器
+docker-compose (start|stop|restart) nginx|php-fpm72...等service名(支持多個參數)
 # 進入容器
 docker-compose exec -it 容器id /bin/bash
 ```
