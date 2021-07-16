@@ -3,3 +3,4 @@
 services/.env
 !services/nginx/conf.d/example.conf
 sftp-config.json
+workspace.code-workspace

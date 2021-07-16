@@ -1,5 +1,8 @@
-FROM mysql:5.7
+ARG MYSQL_VERSION
+FROM ${MYSQL_VERSION}
+
+ARG TZ
 
 # set timezome
-ENV TZ=Asia/Taipei
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+ENV TZ=${TZ}
+RUN ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && echo "$TZ" > /etc/timezone

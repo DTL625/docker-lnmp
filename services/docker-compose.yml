@@ -1,81 +1,79 @@
-version: '2'
+version: '3'
 services:
-  php-fpm72:
-    build: ./php72/
-    container_name: php-fpm72
+  php-fpm:
+    build:
+      context: ./php-fpm
+      args:
+        PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
+        TZ: "$TZ"
+    container_name: php
+    environment:
+      # 檢測用
+      - DB_ROOT_PWD=${MYSQL_ROOT_PASSWORD}
+      - DB_NAME=${MYSQL_DATABASE}
+      - DB_USERNAME=${MYSQL_USER}
+      - DB_PWD=${MYSQL_PASSWORD}
     expose:
-      - "9000"
-      - "9001"
-    depends_on:
-      - mysql-db
-      - redis-db
-#      - memcached:memcached
+      - 9501
+    extra_hosts:
+      - "www.site1.com:172.17.0.1"
     volumes:
-      - ${APPLICATION}:/data/www:rw
-      - ./php72/php.ini:/usr/local/etc/php/php.ini:ro
-      - ./php72/php-fpm.conf:/usr/local/etc/php-fpm.conf:ro
-      - ../logs/php-fpm72:/var/log/php-fpm:rw
+      - ${SOURCE_DIR}:/www/:rw
+      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+      - ${LOG_DIR}/php-fpm:/var/log/php
+      - ${DATA_DIR}/composer:/tmp/composer
     restart: always
-    command: php-fpm
-
-#  php-fpm56:
-#    build: ./php56/
-#    container_name: php-fpm56
-#    expose:
-#      - "9000"
-#      - "9001"
-#    links:
-#      - mysql-db:mysql-db
-#      - redis-db:redis-db
-#      - memcached:memcached
-#    volumes:
-#      - ${APPLICATION}:/data/www:rw
-#      - ./php56/php.ini:/usr/local/etc/php/php.ini:ro
-#      - ./php56/php-fpm.conf:/usr/local/etc/php-fpm.conf:ro
-#      - ../logs/php-fpm56:/var/log/php-fpm:rw
-#    restart: always
-#    command: php-fpm
-
-#  nginx:
-#    build: ./nginx
-#    container_name: nginx
-#    depends_on:
-#      - php-fpm72
-##      - php-fpm56
-#    links:
-#      - php-fpm72:php-fpm72
-##      - php-fpm56:php-fpm56
-#    volumes:
-#      - ${APPLICATION}:/data/www:rw
-#      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-#      - ./nginx/certs/:/etc/nginx/certs
-#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-#      - ../logs/nginx:/var/log/nginx
-#    ports:
-#      - "80:80"
-#      - "8080:8080"
-#      - "443:443"
-#    restart: always
-#    command: nginx -g 'daemon off;'
-
-  mysql-db:
-      build: ./mysql
-      container_name: mysql-db
-      ports:
-        - "3306:3306"
-      volumes:
-        - ../data/mysql:/var/lib/mysql:rw
-        - ../logs/mysql:/var/lib/mysql-logs:rw
-        - ./mysql/conf.d:/etc/mysql/conf.d:ro
-      environment:
-        # 相關設定可以在.env中設定
-        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-        MYSQL_DATABASE: ${MYSQL_DATABASE}
-        MYSQL_USER: ${MYSQL_USER}
-        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      restart: always
-      command: "--character-set-server=utf8"
-
+    cap_add:
+      - SYS_PTRACE
+    networks:
+      - default
+  nginx:
+    build:
+      context: ./nginx
+      args:
+        NGINX_VERSION: nginx:${NGINX_VERSION}
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        NGINX_INSTALL_APPS: ${NGINX_INSTALL_APPS}
+    container_name: nginx
+    volumes:
+      - ${SOURCE_DIR}:/www:rw
+      - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl:rw
+      - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
+      - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf:ro
+      - ${NGINX_FASTCGI_PHP_CONF}:/etc/nginx/fastcgi-php.conf:ro
+      - ${NGINX_FASTCGI_PARAMS}:/etc/nginx/fastcgi_params:ro
+      - ${LOG_DIR}/nginx:/var/log/nginx/:rw
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    restart: always
+    command: nginx -g 'daemon off;'
+  mysql:
+    build:
+      context: ./mysql
+      args:
+        MYSQL_VERSION: mysql:${MYSQL5_VERSION}
+        TZ: "$TZ"
+    container_name: mysql-db
+    ports:
+      - "${MYSQL_HOST_PORT}:3306"
+    volumes:
+      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
+      - ${LOG_DIR}/mysql:/var/lib/mysql-logs:rw
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: "$TZ"
+    restart: always
+    networks:
+      - default
   redis-db:
       build: ./redis
       container_name: redis-db
@@ -86,3 +84,5 @@ services:
         - ../data/redis:/data:rw
         - ../logs/redis:/var/log/:rw
       restart: always
+networks:
+  default:

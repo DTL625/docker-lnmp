@@ -1,138 +1,142 @@
 # docker-lnmp
 
-非常感謝 [jianyan74/lnmp-dockerfiles](https://github.com/jianyan74/lnmp-dockerfiles)項目， 本dockerfile是由jianyan74/lnmp-dockerfiles項目修改後得來。
-
-在原項目基礎上，增加了以下：
-
-- 增加了環境變量，配置更輕鬆 
-- 增加了php5.6.32版本，實現多版本 
-- 修改了apt-get源，可使用阿里源或163源，編譯更快速 
-- php5.6.32增加了memcache、opencc、opencc4php、xdebug擴展，php7.2如果需要的話，可以拷貝  5.6.32dockerfile內的擴展編譯內容到php7.2
-- 預先下載好了編譯包，節約時間
-
-
-搭建lnmp環境
-
 ## 簡介
-用docker容器服務的方式搭建lnmp環境，易於維護、升級。使用前需瞭解Docker的基本概念，常用基本命令。
-可以一條條命令執行docker命令來構建鏡像，容器。這裡推薦使用docker-compose來管理，執行項目，下面是使用流程。
+用docker容器服務的方式搭建lnmp環境，易於維護、升級，使用前需瞭解Docker的基本概念及常用基本命令。
+
+本dockerfile是由下列項目修改得來，非常感謝兩位前輩提供的資源
+
+- [jianyan74/lnmp-dockerfiles](https://github.com/jianyan74/lnmp-dockerfiles)
+- [yeszao/dnmp](https://github.com/yeszao/dnmp)
+
+### 安裝需求
+- git
+- [Docker](https://docs.docker.com/engine/installation/linux/docker-ce/centos/)
+- [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
+- （選項）[docker使用鏡像](https://github.com/yeasy/docker_practice/blob/master/install/mirror.md)
 
 
-相關軟件版本：
-- PHP 7.2
-- PHP 5.6.32
-- MySQL 5.7
-- Nginx 1.12
-- Redis 4.0
+### 目錄結構
 
-用到的PHP擴展
-- redis
-- swoole latest
-- memcached
-- memcache
-- opencc
-- xdebug
-
-#### 目錄結構
 ```
-├── app # 應用安裝目錄 
-├── data # mongo、mysql數據庫文件存儲
-├── docs # 說明文件
-├── logs # log文件：nginx、mongo、mysql、php...etc
-└── services # service配置
+.
+├── app  			# 應用目錄
+├── data 			# mongo、mysql數據庫文件存儲
+├── docs 			# 說明文件
+├── logs 			# nginx、mysql、php..等log
+└── services 		# service配置
     ├── memcached
     ├── mongo
     ├── mysql
     ├── nginx
-    ├── php56
-    ├── php72
-    └── redis
+    ├── redis
+    └── www
 ```
 
+## 1. 快速使用
 
-## 使用
-#### 1.安裝Docker，Docker-compose
-- Docker，詳見官方文檔：https://docs.docker.com/engine/installation/linux/docker-ce/centos/
-- docker-compose，文檔：https://docs.docker.com/compose/install/
-- 鏡像加速，參考[docker使用國內鏡像](https://github.com/yeasy/docker_practice/blob/master/install/mirror.md)
-       不然下載鏡像速度會卡的你懷疑人生
-- 常見問題，必看。參考[這裡](https://github.com/jianyan74/lnmp-dockerfiles/blob/master/docs/issue.md)
-```
-sudo pip install -U docker-compose
-```
+1. 下載docker-lnmp，直接clone：
+    
+    ```
+    $git clone git@github.com:DTL625/docker-lnmp.
+    $chmod -R 777 ./docker-lnmp/logs
+    ```
+    
+2. 進入項目service目錄，複製 `env環境變量` 及 `docker-compose` 配置文件。
+    
+    ```
+    $ cd docker-lnmp/service
+    $ cp env.sample .env 
+    $ cp docker-compose.sample.yml docker-compose.yml
+    ```
 
-#### 2.下載docker-lnmp
-直接clone：
-```
-git clone git@github.com:DTL625/docker-lnmp.git
-chmod -R 777 ./docker-lnmp/logs
-cd docker-lnmp/services
-```
-拷貝.example.env為.env，根據自己的情況修改其中的配置
-```
-cp .env.example .env
-```
+3. 執行命令以啟動容器，首次啟動時會花較長時間：
+    
+    ```
+    # 命令須在docker-compose.yml所在文件夾執行
+    docker-compose up
+    
+    # （推薦）增加參數 -d 使服務在背景執行
+    docker-compose up -d
+    ```
 
-#### 3.docker-compose構建項目
-切換至docker-compose.yml所在文件夾：
-```
-cd docker_lnmp_root/service
-```
-執行命令，亦可增加參數-d使服務在背景執行：
-```
-docker-compose up
-# or
-docker-compose up -d
-```
+4. 使用瀏覽器訪問`http://localhost`(或https)就能看到效果，相關配置與原始碼存在放：
+    - **nginx：** ./services/nginx/conf.d/localhost.conf
+    - **php：** ./services/www/localhost/index.php
+   
+## 2. 常用命令
 
-使用 docker-compose 基本上就這麼簡單，Docker 就跑起來了，用 stop，start 關閉開啓容器服務。
-更多的是在於編寫 dockerfile 和 docker-compose.yml 文件。
+控制所有容器
 
-可以這樣關閉容器並刪除服務：
 ```
-docker-compose down
+$ docker-compose up     # 創建並且啓動所有容器
+$ docker-compose up -d  # 創建並且後台運行方式啓動所有容器
+$ docker-compose down   # 停止並刪除容器，網絡，圖像和掛載卷 
 ```
 
-#### 4. Demo站點搭建
+控制指定容器，以nmp三兄弟為例：
 
-進入app目錄將你的項目文件拷貝到其中(項目文件會被映射到容器中的/data/www目錄下)
-
-
-
-域名解析
-
-找到 `services/nginx/conf.d` 下的 example.conf 里修改配置
 ```
-server_name example.com;
-root /data/www/example;
-access_log  /var/log/nginx/example.log;
-```
-注意重啓一下nginx容器才能生效
-
-## 我自己的常用命令
-```php
-# 開啓所有容器
-docker-compose up -d
-# 關閉所有容器
-docker-compose down
-# 啟動|關閉|重啓 某個容器
-docker-compose (start|stop|restart) nginx|php-fpm72...等service名(支持多個參數)
-# 進入容器
-docker-compose exec -it 容器id /bin/bash
+$ docker-compose up nginx php-fpm mysql         # 創建並且啓動nmp多個容器
+$ docker-compose up -d nginx php-fpm  mysql     # 創建並且已後台運行的方式啓動nmp容器
 ```
 
-## 問題反饋
+控制服務，以php為例：
 
-在使用中有任何問題，歡迎反饋給我
+```
+$ docker-compose start php-fpm       # 啓動服務
+$ docker-compose stop php-fpm        # 停止服務
+$ docker-compose restart php-fpm     # 重啓服務
+$ docker-compose build php-fpm       # 構建或者重新構建服務
+$ docker-compose rm php              # 删除並停止php容器
+```
 
-## 引用
+## 3. 快捷指令
 
-[zPhal-dockerfiles](https://github.com/ZpGuo/zPhal-dockerfiles)
+> 當專案需執行composer，但本機php版本不符合需求。
 
-## 學習文檔
-[Docker 配置詳解](https://www.jianshu.com/p/2217cfed29d7)
+相信每個PHP開發者都遇過這問題，而docker本身支援在容器內/外執行對應的service。
 
-[Docker 入門教程](http://www.ruanyifeng.com/blog/2018/02/docker-tutorial.html)
+但缺點是命令冗長且難以記憶，下面將介紹如何透過`alias` 功能簡化命令解決問這個問題，並分別提供兩種不同方法做使用：
 
-[Docker 微服務教程](http://www.ruanyifeng.com/blog/2018/02/docker-wordpress-tutorial.html)
+1. 進入容器後使用對應版本服務
+2. 在本機端直接引用對應的服務
 
+### 3-1 配置快捷命令
+
+1. 開啟 `~/.bashrc`或`~/.zshrc`文件，並參考 [bash.alias.example](https://github.com/DTL625/docker-lnmp/blob/v1.0-doc/docs/bash.alias.example) 內容加上自定義的命令。
+2. 執行 `source` 使設定生效
+
+```
+$ source ~/.bashrc 
+# or 
+$ source ~/.zshrc 
+```
+
+### 3-2. 透過快捷命令進入容器
+
+設置生效後即可透過簡短版命令直接進入容器，例：php
+ 
+```
+# alias dphp='docker exec -it php /bin/sh'
+
+$ dphp
+```
+
+執行後根據對應的Dockerfile配置內容進入容器起始位置`/www`
+
+```
+WORKDIR /www
+```
+
+### 3-3. 本機執行容器
+
+```
+$ php -v
+PHP 7.2.13 (cli) (built: Dec 21 2018 02:22:47) ( NTS )
+Copyright (c) 1997-2018 The PHP Group
+Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
+    with Zend OPcache v7.2.13, Copyright (c) 1999-2018, by Zend Technologies
+    with Xdebug v2.6.1, Copyright (c) 2002-2018, by Derick Rethans
+```
+
+## 4. Log
