@@ -122,7 +122,7 @@ $ source ~/.zshrc
 $ dphp
 ```
 
-執行後根據對應的Dockerfile配置內容進入容器起始位置`/www`
+執行後根據對應的Dockerfile配置內容進入容器起始位置`/www`，即可執行操作
 
 ```
 WORKDIR /www
@@ -139,4 +139,33 @@ Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
     with Xdebug v2.6.1, Copyright (c) 2002-2018, by Derick Rethans
 ```
 
-## 4. Log
+## 4. 日誌
+
+Log文件生成的位置取決於各服務下`conf`(容器內)以及`docker-compose`（容器外）配置的值，以nginx配置為例：
+
+
+**容器中service配置**
+
+配置站點log存放位置，為nginx容器中的 `/var/log/nginx`
+```
+server {    
+    access_log /var/log/nginx/nginx.localhost.access.log  main;
+    error_log  /var/log/nginx/nginx.localhost.error.log  warn;
+}
+```
+
+**本機docker-compose與env配置**
+
+```yaml
+version: '3'
+services:
+  nginx:
+    # ...
+    volumes:
+        # 環境參數(.env)設置為 LOG_DIR=../logs
+      - ${LOG_DIR}/nginx:/var/log/nginx/:rw 
+```
+其中以`：`區分三個段落，依序分別為：
+1. 本機映射路徑 - 對應路應為`根目錄/logs/ngix`
+2. 容器映射路境 - 容器中該目錄的檔案最後會映射到本地路徑中
+3. 存取權限 - 容器中存取權限
