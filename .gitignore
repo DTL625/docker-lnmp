@@ -1,6 +1,7 @@
 .idea/
 /logs/*
 services/.env
+services/.env.bak
 !services/nginx/conf.d/example.conf
 sftp-config.json
 workspace.code-workspace
