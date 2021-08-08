@@ -1,10 +1,10 @@
-# dnmp alias
+#lnmp alias
 alias dnginx='docker exec -it nginx /bin/sh'
 alias dphp='docker exec -it php /bin/sh'
 alias dmysql='docker exec -it mysql-db /bin/bash'
 alias dredis='docker exec -it redis-db /bin/sh'
 
-# php7 cli
+#php7 cli
 php () {
     tty=
     tty -s && tty=--tty
@@ -17,7 +17,7 @@ php () {
         dnmp_php php "$@"
 }
 
-# php7 composer
+#php7 composer
 composer () {
     tty=
     tty -s && tty=--tty
@@ -31,6 +31,3 @@ composer () {
         --workdir /app \
         dnmp_php composer "$@"
 }
-=======
-}
->>>>>>> Stashed changes

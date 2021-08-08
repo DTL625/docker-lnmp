@@ -38,7 +38,7 @@ ERROR: Encountered errors while bringing up the project.
 > 由於映射端口衝突導致的，修改 docker-composer.yml 文件裡面對應的容器映射端口，比如 3306:3306 => 3307:3306
 
 
-### 3、修改默認數據庫賬號密碼
+### 3、修改默認數據庫帳號密碼
 
 解決方法
 

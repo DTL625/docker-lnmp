@@ -21,7 +21,7 @@
 .
 ├── app  			# 應用目錄
 ├── data 			# mongo、mysql數據庫文件存儲
-├── docs 			# 說明文件
+├── docs 			# 相關說明文件
 ├── logs 			# nginx、mysql、php..等log
 └── services 		# service配置
     ├── memcached
@@ -112,7 +112,7 @@ $ source ~/.bashrc
 $ source ~/.zshrc 
 ```
 
-### 3-2. 透過快捷命令進入容器
+### 3-2 透過快捷命令進入容器
 
 設置生效後即可透過簡短版命令直接進入容器，例：php
  
@@ -128,7 +128,7 @@ $ dphp
 WORKDIR /www
 ```
 
-### 3-3. 本機執行容器
+### 3-3 本機執行容器
 
 ```
 $ php -v
@@ -147,6 +147,7 @@ Log文件生成的位置取決於各服務下`conf`(容器內)以及`docker-comp
 **容器中service配置**
 
 配置站點log存放位置，為nginx容器中的 `/var/log/nginx`
+
 ```
 server {    
     access_log /var/log/nginx/nginx.localhost.access.log  main;
@@ -169,3 +170,7 @@ services:
 1. 本機映射路徑 - 對應路應為`根目錄/logs/ngix`
 2. 容器映射路境 - 容器中該目錄的檔案最後會映射到本地路徑中
 3. 存取權限 - 容器中存取權限
+
+---
+
+### 更多說明，請參考 `./docs`
