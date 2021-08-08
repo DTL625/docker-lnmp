@@ -22,14 +22,14 @@
 ├── app  			# 應用目錄
 ├── data 			# mongo、mysql數據庫文件存儲
 ├── docs 			# 相關說明文件
-├── logs 			# nginx、mysql、php..等log
+├── logs 			# nginx、mysql、php..等日誌文件，並加入gitignore設定
 └── services 		# service配置
     ├── memcached
     ├── mongo
     ├── mysql
     ├── nginx
     ├── redis
-    └── www
+    └── www # 默認web服務項目根目錄（php/nginx）
 ```
 
 ## 1. 快速使用
