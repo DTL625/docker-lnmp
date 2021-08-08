@@ -1,0 +1,5 @@
+*
+!.gitignore
+!./example.conf
+!./info.conf
+!./localhost.conf

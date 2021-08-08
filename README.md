@@ -62,6 +62,16 @@
 4. 使用瀏覽器訪問`http://localhost`(或https)就能看到效果，相關配置與原始碼存在放：
     - **nginx：** ./services/nginx/conf.d/localhost.conf
     - **php：** ./services/www/localhost/index.php
+
+5. 若於nginx設定中有自訂域名，本地訪問時須同步新增到宿主主機中的域名設定`/etc/hosts`中
+
+	```
+	# nginx/conf.d/mysite.conf 中自定義域名mysite.local
+	server_name     mysite.local;
+	
+	# 同步至 /etc/hosts/
+	127.0.0.1 mysite.local
+	```
    
 ## 2. 常用命令
 

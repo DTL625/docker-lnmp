@@ -1,7 +1,9 @@
 .idea/
 /logs/*
-services/.env
-services/.env.bak
-!services/nginx/conf.d/example.conf
+services/.env*
+!services/.env.example
 sftp-config.json
 workspace.code-workspace
+
+services/nginx/ssl/*
+!services/nginx/ssl/localhost
