@@ -14,7 +14,7 @@ php () {
         --rm \
         --volume $PWD:/www:rw \
         --workdir /www \
-        dnmp_php php "$@"
+        services_php-fpm php "$@"
 }
 
 #php7 composer
@@ -29,5 +29,5 @@ composer () {
         --volume ~/dnmp/data/composer:/tmp/composer \
         --volume $(pwd):/app \
         --workdir /app \
-        dnmp_php composer "$@"
+        services_php-fpm composer "$@"
 }

@@ -20,7 +20,7 @@ services:
     extra_hosts:
       - "www.site1.com:172.17.0.1"
     volumes:
-      - ${SOURCE_DIR}:/www/:rw
+      - ${SOURCE_DIR}:/www/:rw,cached
       - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
       - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
       - ${LOG_DIR}/php-fpm:/var/log/php
@@ -39,7 +39,7 @@ services:
         NGINX_INSTALL_APPS: ${NGINX_INSTALL_APPS}
     container_name: nginx
     volumes:
-      - ${SOURCE_DIR}:/www:rw
+      - ${SOURCE_DIR}:/www:rw,cached
       - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl:rw
       - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
       - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf:ro
