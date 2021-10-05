@@ -16,16 +16,17 @@ services:
       - DB_USERNAME=${MYSQL_USER}
       - DB_PWD=${MYSQL_PASSWORD}
     expose:
-      - 9501
+      - 9000
     extra_hosts:
       - "www.site1.com:172.17.0.1"
     volumes:
-      - ${SOURCE_DIR}:/www/:rw,cached
+      - ${SOURCE_DIR}:/www/:cached
       - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
       - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
       - ${LOG_DIR}/php-fpm:/var/log/php
       - ${DATA_DIR}/composer:/tmp/composer
-    restart: always
+    restart: unless-stopped
+    tty: true
     cap_add:
       - SYS_PTRACE
     networks:
@@ -39,7 +40,7 @@ services:
         NGINX_INSTALL_APPS: ${NGINX_INSTALL_APPS}
     container_name: nginx
     volumes:
-      - ${SOURCE_DIR}:/www:rw,cached
+      - ${SOURCE_DIR}:/www:cached
       - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl:rw
       - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
       - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf:ro
@@ -50,7 +51,8 @@ services:
       - "80:80"
       - "8080:8080"
       - "443:443"
-    restart: always
+      - "8000:8000"
+    restart: unless-stopped
     command: nginx -g 'daemon off;'
   mysql:
     build:
@@ -59,6 +61,7 @@ services:
         MYSQL_VERSION: mysql:${MYSQL5_VERSION}
         TZ: "$TZ"
     container_name: mysql-db
+    tty: true
     ports:
       - "${MYSQL_HOST_PORT}:3306"
     volumes:
@@ -71,19 +74,20 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       TZ: "$TZ"
-    restart: always
+    restart: unless-stopped
     networks:
       - default
   redis-db:
       build: ./redis
       container_name: redis-db
+      tty: true
       ports:
-        - "6379:6379"
+        - "${REDIS_HOST_PORT}:6379"
       volumes:
         - ./redis/redis.conf:/etc/redis/redis.conf:rw
         - ../data/redis:/data:rw
         - ../logs/redis:/var/log/:rw
-      restart: always
+      restart: unless-stopped
   # ELK
   elasticsearch:
     build:
@@ -135,3 +139,4 @@ services:
 
 networks:
   default:
+    driver: bridge
