@@ -34,7 +34,7 @@
 
 ## 1. 快速使用
 
-1. 下載docker-lnmp，直接clone：
+1. clone docker-lnmp：
     
     ```
     $git clone git@github.com:DTL625/docker-lnmp.
@@ -44,19 +44,21 @@
 2. 進入項目service目錄，複製 `env環境變量` 及 `docker-compose` 配置文件。
     
     ```
-    $ cd docker-lnmp/service
-    $ cp env.sample .env 
-    $ cp docker-compose.sample.yml docker-compose.yml
+    $ cd docker-lnmp
+    $ cp .env.sample .env 
     ```
 
 3. 執行命令以啟動容器，首次啟動時會花較長時間：
     
     ```
-    # 命令須在docker-compose.yml所在文件夾執行
+    # 執行命令建立＆啟動容器（預設使用 docker-compos.yml配置）
     docker-compose up
     
     # （推薦）增加參數 -d 使服務在背景執行
     docker-compose up -d
+
+    # （optinal）使用 -f參數以指定 yml檔設定，以 elk為例;
+    docker-compose -f docker-composer-elk.yml up -d 
     ```
 
 4. 使用瀏覽器訪問`http://localhost`(或https)就能看到效果，相關配置與原始碼存在放：
