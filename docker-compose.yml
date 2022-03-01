@@ -60,7 +60,7 @@ services:
       args:
         MYSQL_VERSION: mysql:${MYSQL5_VERSION}
         TZ: "$TZ"
-    container_name: mysql-db
+    container_name: mysql
     tty: true
     ports:
       - "${MYSQL_HOST_PORT}:3306"
@@ -77,9 +77,9 @@ services:
     restart: unless-stopped
     networks:
       - default
-  redis-db:
+  redis:
       build: services/redis
-      container_name: redis-db
+      container_name: redis
       tty: true
       ports:
         - "${REDIS_HOST_PORT}:6379"
