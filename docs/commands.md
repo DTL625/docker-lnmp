@@ -39,16 +39,29 @@ docker attach con_name
 
 ## docker-compose相關
 
+啟動&關閉容器
+```
+$ docker-compose up                         # 創建並且啓動所有容器, 預設讀取docker-compose.yml
+$ docker-compose up -d                      # 創建並且以後台運行方式啓動所有容器
+$ docker-compose up nginx php mysql         # 創建並且啓動nginx、php、mysql的多個容器
+
+$ docker-compose down                       # 停止並刪除容器，網絡，圖像和掛載卷(所有)
+$ docker-compose down nginx php mysql       # 停止並刪除容器，網絡，圖像和掛載卷(特定)
+```
+讀取特定的yml中的相關服務    
+增加參數 -f <specify.yml>, 例如:    
+```
+$ docker-compose -f <specify.yml> up        # 創建並且啓動指定設定檔所有容器
+... 其餘與一般的啟動關閉與法無異
+```
+
 進入容器
 ```
 docker-compose exec [images] bash # 例: docker-compose exec php-fpm bash
 ```
 
+其它  
 ```
-$ docker-compose up                         # 創建並且啓動所有容器
-$ docker-compose up -d                      # 創建並且以後台運行方式啓動所有容器
-$ docker-compose up nginx php mysql         # 創建並且啓動nginx、php、mysql的多個容器
-
 $ docker-compose start php                  # 啓動服務
 $ docker-compose stop php                   # 停止服務
 $ docker-compose restart php                # 重啓服務
