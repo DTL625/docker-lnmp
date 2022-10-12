@@ -81,17 +81,31 @@ services:
     restart: unless-stopped
     networks:
       - default
+  postgres:
+    image: postgres:13.2-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: "${POSTGRES_DATABASE}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ${DATA_DIR}/postgres:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    networks:
+      - default
   redis:
-      build: services/redis
-      container_name: redis
-      tty: true
-      ports:
-        - "${REDIS_HOST_PORT}:6379"
-      volumes:
-        - ./services/redis/redis.conf:/etc/redis/redis.conf:rw
-        - ./data/redis:/data:rw
-        - ./logs/redis:/var/log/:rw
-      restart: unless-stopped
+    build: services/redis
+    container_name: redis
+    tty: true
+    ports:
+      - "${REDIS_HOST_PORT}:6379"
+    volumes:
+      - ./services/redis/redis.conf:/etc/redis/redis.conf:rw
+      - ./data/redis:/data:rw
+      - ./logs/redis:/var/log/:rw
+    restart: unless-stopped
 networks:
   default:
     driver: bridge
