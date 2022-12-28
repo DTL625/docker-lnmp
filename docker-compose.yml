@@ -84,6 +84,7 @@ services:
   postgres:
     image: postgres:13.2-alpine
     restart: always
+    container_name: postgres-sql
     environment:
       POSTGRES_DB: "${POSTGRES_DATABASE}"
       POSTGRES_USER: "${POSTGRES_USER}"
