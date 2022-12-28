@@ -37,11 +37,11 @@
 1. clone docker-lnmp：
     
     ```
-    $git clone git@github.com:DTL625/docker-lnmp.
-    $chmod -R 777 ./docker-lnmp/logs
+    $ git clone git@github.com:DTL625/docker-lnmp.
+    $ chmod -R 777 ./docker-lnmp/logs
     ```
     
-2. 進入項目service目錄，複製 `env環境變量` 及 `docker-compose` 配置文件。
+2. 複製 `env環境變量`。
     
     ```
     $ cd docker-lnmp
