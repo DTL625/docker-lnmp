@@ -19,6 +19,7 @@ services:
       - 9000
     extra_hosts:
       - "www.site1.com:172.17.0.1"
+      - "www.site2.com:172.17.0.1"
     volumes:
       - ${SOURCE_DIR}:/www/:cached
       - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
@@ -52,6 +53,9 @@ services:
       - "8080:8080"
       - "443:443"
       - "8000:8000"
+    extra_hosts:
+      - "www.site1.com:172.17.0.2"
+      - "www.site2.com:172.17.0.2"
     restart: unless-stopped
     command: nginx -g 'daemon off;'
   mysql:
@@ -77,17 +81,32 @@ services:
     restart: unless-stopped
     networks:
       - default
+  postgres:
+    image: postgres:13.2-alpine
+    restart: always
+    container_name: postgres-sql
+    environment:
+      POSTGRES_DB: "${POSTGRES_DATABASE}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ${DATA_DIR}/postgres:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    networks:
+      - default
   redis:
-      build: services/redis
-      container_name: redis
-      tty: true
-      ports:
-        - "${REDIS_HOST_PORT}:6379"
-      volumes:
-        - ./services/redis/redis.conf:/etc/redis/redis.conf:rw
-        - ./data/redis:/data:rw
-        - ./logs/redis:/var/log/:rw
-      restart: unless-stopped
+    build: services/redis
+    container_name: redis
+    tty: true
+    ports:
+      - "${REDIS_HOST_PORT}:6379"
+    volumes:
+      - ./services/redis/redis.conf:/etc/redis/redis.conf:rw
+      - ./data/redis:/data:rw
+      - ./logs/redis:/var/log/:rw
+    restart: unless-stopped
 networks:
   default:
     driver: bridge
