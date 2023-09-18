@@ -32,6 +32,38 @@ services:
       - SYS_PTRACE
     networks:
       - default
+#  php-fpm81:
+#    build:
+#      context: services/php-fpm
+#      args:
+#        PHP_VERSION: php:8.1.6-fpm-alpine
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
+#        TZ: "$TZ"
+#    container_name: php
+#    environment:
+#      # 檢測用
+#      - DB_ROOT_PWD=${MYSQL_ROOT_PASSWORD}
+#      - DB_NAME=${MYSQL_DATABASE}
+#      - DB_USERNAME=${MYSQL_USER}
+#      - DB_PWD=${MYSQL_PASSWORD}
+#    expose:
+#      - 9000
+#    extra_hosts:
+#      - "www.site1.com:172.17.0.1"
+#      - "www.site2.com:172.17.0.1"
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:cached
+#      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+#      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+#      - ${LOG_DIR}/php-fpm:/var/log/php
+#      - ${DATA_DIR}/composer:/tmp/composer
+#    restart: unless-stopped
+#    tty: true
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
   nginx:
     build:
       context: services/nginx
