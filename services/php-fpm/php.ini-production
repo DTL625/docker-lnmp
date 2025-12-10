@@ -1,0 +1,17 @@
+upload_max_filesize = 100M
+post_max_size = 100M
+memory_limit = 512M
+max_execution_time = 300
+default_socket_timeout = 60
+
+; 生產環境設定
+display_errors = Off
+log_errors = On
+error_log = /var/log/php/error.log
+
+; OPcache 設定
+opcache.enable = 1
+opcache.revalidate_freq = 0
+opcache.validate_timestamps = 0
+opcache.max_accelerated_files = 10000
+opcache.memory_consumption = 256

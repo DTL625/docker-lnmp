@@ -1,144 +1,102 @@
-version: '3'
+version: '3.8'
+
 services:
-  php-fpm:
+  php:
     build:
-      context: services/php-fpm
-      args:
-        PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
-        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
-        TZ: "$TZ"
-    container_name: php
-    environment:
-      # 檢測用
-      - DB_ROOT_PWD=${MYSQL_ROOT_PASSWORD}
-      - DB_NAME=${MYSQL_DATABASE}
-      - DB_USERNAME=${MYSQL_USER}
-      - DB_PWD=${MYSQL_PASSWORD}
-    expose:
-      - 9000
-    extra_hosts:
-      - "www.site1.com:172.17.0.1"
-      - "www.site2.com:172.17.0.1"
-    volumes:
-      - ${SOURCE_DIR}:/www/:cached
-      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
-      - ${LOG_DIR}/php-fpm:/var/log/php
-      - ${DATA_DIR}/composer:/tmp/composer
-    restart: unless-stopped
-    tty: true
-    cap_add:
-      - SYS_PTRACE
-    networks:
-      - default
-#  php-fpm81:
-#    build:
-#      context: services/php-fpm
-#      args:
-#        PHP_VERSION: php:8.1.6-fpm-alpine
-#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-#        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
-#        TZ: "$TZ"
-#    container_name: php
-#    environment:
-#      # 檢測用
-#      - DB_ROOT_PWD=${MYSQL_ROOT_PASSWORD}
-#      - DB_NAME=${MYSQL_DATABASE}
-#      - DB_USERNAME=${MYSQL_USER}
-#      - DB_PWD=${MYSQL_PASSWORD}
-#    expose:
-#      - 9000
-#    extra_hosts:
-#      - "www.site1.com:172.17.0.1"
-#      - "www.site2.com:172.17.0.1"
-#    volumes:
-#      - ${SOURCE_DIR}:/www/:cached
-#      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-#      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
-#      - ${LOG_DIR}/php-fpm:/var/log/php
-#      - ${DATA_DIR}/composer:/tmp/composer
-#    restart: unless-stopped
-#    tty: true
-#    cap_add:
-#      - SYS_PTRACE
-#    networks:
-#      - default
-  nginx:
-    build:
-      context: services/nginx
-      args:
-        NGINX_VERSION: nginx:${NGINX_VERSION}
-        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-        NGINX_INSTALL_APPS: ${NGINX_INSTALL_APPS}
-    container_name: nginx
-    volumes:
-      - ${SOURCE_DIR}:/www:cached
-      - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl:rw
-      - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
-      - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf:ro
-      - ${NGINX_FASTCGI_PHP_CONF}:/etc/nginx/fastcgi-php.conf:ro
-      - ${NGINX_FASTCGI_PARAMS}:/etc/nginx/fastcgi_params:ro
-      - ${LOG_DIR}/nginx:/var/log/nginx/:rw
-    ports:
-      - "80:80"
-      - "8080:8080"
-      - "443:443"
-      - "8000:8000"
-    extra_hosts:
-      - "www.site1.com:172.17.0.2"
-      - "www.site2.com:172.17.0.2"
-    restart: unless-stopped
-    command: nginx -g 'daemon off;'
-  mysql:
-    build:
-      context: services/mysql
-      args:
-        MYSQL_VERSION: mysql:${MYSQL5_VERSION}
-        TZ: "$TZ"
-    container_name: mysql
-    tty: true
-    ports:
-      - "${MYSQL_HOST_PORT}:3306"
-    volumes:
-      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
-      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
-      - ${LOG_DIR}/mysql:/var/lib/mysql-logs:rw
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      TZ: "$TZ"
-    restart: unless-stopped
-    networks:
-      - default
-  postgres:
-    image: postgres:13.2-alpine
+      context: ./services/php-fpm
+      dockerfile: Dockerfile
+    container_name: laravel-php
     restart: always
-    container_name: postgres-sql
+    working_dir: /var/www/html
+    volumes:
+      - ./app:/var/www/html
+      - php-logs:/var/log/php
     environment:
-      POSTGRES_DB: "${POSTGRES_DATABASE}"
-      POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-      PGDATA: /var/lib/postgresql/data
-    volumes:
-      - ${DATA_DIR}/postgres:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_PORT}:5432"
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-laravel}
+      - DB_USERNAME=${DB_USERNAME:-laravel}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     networks:
-      - default
-  redis:
-    build: services/redis
-    container_name: redis
-    tty: true
+      - laravel
+    depends_on:
+      - mysql
+      - redis
+    healthcheck:
+      test: ["CMD", "php-fpm-healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: laravel-nginx
+    restart: always
     ports:
-      - "${REDIS_HOST_PORT}:6379"
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
     volumes:
-      - ./services/redis/redis.conf:/etc/redis/redis.conf:rw
-      - ./data/redis:/data:rw
-      - ./logs/redis:/var/log/:rw
-    restart: unless-stopped
+      - ./app:/var/www/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - nginx-logs:/var/log/nginx
+    networks:
+      - laravel
+    depends_on:
+      - php
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mysql:
+    image: mysql:8.0
+    container_name: laravel-mysql
+    restart: always
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_DATABASE:-laravel}
+      MYSQL_USER: ${DB_USERNAME:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - laravel
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: laravel-redis
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - laravel
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mysql-data:
+  redis-data:
+  php-logs:
+  nginx-logs:
+
 networks:
-  default:
+  laravel:
     driver: bridge

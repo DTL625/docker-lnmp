@@ -5,6 +5,7 @@ services/.env*
 .env*
 sftp-config.json
 workspace.code-workspace
+.DS_STORE
 
 services/nginx/ssl/*
 !services/nginx/ssl/localhost

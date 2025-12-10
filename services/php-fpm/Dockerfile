@@ -1,48 +1,45 @@
-ARG PHP_VERSION
-FROM ${PHP_VERSION}
+FROM php:8.3-fpm-alpine
 
-ARG TZ
-ARG PHP_EXTENSIONS
-ARG CONTAINER_PACKAGE_URL
+# 安裝系統依賴
+RUN apk add --no-cache \
+    curl \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    libzip-dev \
+    postgresql-dev \
+    sqlite \
+    git \
+    bash \
+    && docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) \
+    gd \
+    zip \
+    pdo \
+    pdo_mysql \
+    bcmath \
+    ctype \
+    fileinfo \
+    json \
+    tokenizer \
+    xml \
+    curl \
+    && rm -rf /var/cache/apk/*
 
+# 安裝 Redis 擴展
+RUN pecl install redis && docker-php-ext-enable redis
 
-RUN if [ $CONTAINER_PACKAGE_URL ] ; then sed -i "s/dl-cdn.alpinelinux.org/${CONTAINER_PACKAGE_URL}/g" /etc/apk/repositories ; fi
+# 設置 PHP 配置
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+COPY php.ini-production $PHP_INI_DIR/conf.d/99-production.ini
 
+# 安裝 Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-COPY ./extensions /tmp/extensions
-WORKDIR /tmp/extensions
-RUN chmod +x install.sh \
-    && sh install.sh \
-    && rm -rf /tmp/extensions
+WORKDIR /var/www/html
 
-ADD ./extensions/install-php-extensions  /usr/local/bin/
-
-RUN chmod uga+x /usr/local/bin/install-php-extensions
-
-RUN apk --no-cache add tzdata \
-    && cp "/usr/share/zoneinfo/$TZ" /etc/localtime \
-    && echo "$TZ" > /etc/timezone
-
-
-# Fix: https://github.com/docker-library/php/issues/240
-RUN apk add gnu-libiconv libstdc++ --no-cache --repository http://${CONTAINER_PACKAGE_URL}/alpine/edge/community/ --allow-untrusted
-ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
-
-
-# Install composer and change it's cache home
-#RUN curl -o /usr/bin/composer https://mirrors.aliyun.com/composer/composer.phar \
-#    && chmod +x /usr/bin/composer
-
-RUN curl -s http://getcomposer.org/installer | php && \
-    echo "export PATH=${PATH}:/var/www/vendor/bin" >> ~/.bashrc && \
-    mv composer.phar /usr/local/bin/composer
-ENV COMPOSER_HOME=/tmp/composer
-
-# php image's www-data user uid & gid are 82, change them to 1000 (primary user)
-RUN apk --no-cache add shadow && usermod -u 1000 www-data && groupmod -g 1000 www-data
-
-WORKDIR /www
+# 建立非 root 使用者
+RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
+USER appuser
 
 CMD ["php-fpm"]
-
-EXPOSE 9000
