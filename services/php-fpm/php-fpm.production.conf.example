@@ -1,0 +1,166 @@
+; ==============================================
+; MUSI Production PHP-FPM Configuration
+; 生產環境 PHP-FPM 配置示例
+; ==============================================
+
+[www]
+; 進程所有者和所在組
+user = www-data
+group = www-data
+
+; 監聽地址
+listen = 0.0.0.0:9000
+
+; 允許來自的客戶端
+listen.allowed_clients = any
+
+; ==============================================
+; 進程管理
+; ==============================================
+
+; 進程管理方式: static | dynamic | ondemand
+; static: 固定進程數
+; dynamic: 動態進程數 (推薦)
+; ondemand: 按需創建進程
+pm = dynamic
+
+; 最大子進程數 (dynamic 模式)
+; 根據服務器內存調整，一般每個進程消耗 40-60MB
+pm.max_children = 50
+
+; 初始啟動的子進程數
+pm.start_servers = 10
+
+; 最小空閒進程數
+pm.min_spare_servers = 5
+
+; 最大空閒進程數
+pm.max_spare_servers = 25
+
+; 達到 max_children 後的等待請求數
+pm.max_requests = 500
+
+; 當進程達到 pm.max_requests 時重啟進程前的暖期秒數
+pm.max_requests_grace_period = 30s
+
+; 進程池中進程的優先級 (-20 高優先級, 20 低優先級)
+process_priority = 0
+
+; ==============================================
+; 性能和超時設置
+; ==============================================
+
+; 請求超時時間 (秒)
+request_terminate_timeout = 300
+
+; 危險超時時間 (秒)
+request_slowlog_timeout = 5s
+
+; 慢日誌路徑
+slowlog = /var/log/php/slow.log
+
+; 每個進程的輸出日誌緩衝區大小
+catch_workers_output = yes
+
+; 清除環境變數 (安全設置)
+clear_env = no
+
+; ==============================================
+; 資源限制
+; ==============================================
+
+; 文件描述符限制
+rlimit_files = 65535
+
+; 內存限制
+rlimit_core = unlimited
+
+; ==============================================
+; 日誌和監控
+; ==============================================
+
+; 訪問日誌
+access.log = /var/log/php/access.log
+
+; 訪問日誌格式
+access.format = "%R - %u %t \"%m %r%Q%q\" %s %f %{mili}d %{kilo}M %C%%"
+
+; 系統日誌 (如果不想使用文件)
+; error_log = syslog
+error_log = /var/log/php/error.log
+
+; ==============================================
+; 安全設置
+; ==============================================
+
+; 禁用 getenv() 訪問環境變數
+; security.limit_extensions = .php
+
+; 隱藏 PHP 版本號
+; expose_php = Off (在 php.ini 中設置)
+
+; ==============================================
+; 狀態和監控
+; ==============================================
+
+; 狀態頁面路由
+pm.status_path = /status
+
+; ping 響應路由 (用於健康檢查)
+ping.path = /ping
+
+; ping 響應輸出
+ping.response = pong
+
+; ==============================================
+; 環境變數 (傳遞給 PHP)
+; ==============================================
+
+env[MUSI_ENV] = production
+env[LOG_CHANNEL] = stderr
+env[APP_ENV] = production
+
+; ==============================================
+; 其他設置
+; ==============================================
+
+; 最大並發連接數
+; listen.backlog = 511
+
+; 在進程池命名前綁定監聽端口
+; listen.bind_whitelist = 127.0.0.1
+
+; ==============================================
+; 性能優化建議
+; ==============================================
+
+; 根據服務器配置調整：
+;
+; 4GB 內存服務器:
+;   pm.max_children = 30
+;   pm.start_servers = 10
+;   pm.min_spare_servers = 5
+;   pm.max_spare_servers = 20
+;
+; 8GB 內存服務器:
+;   pm.max_children = 60
+;   pm.start_servers = 20
+;   pm.min_spare_servers = 10
+;   pm.max_spare_servers = 30
+;
+; 16GB+ 內存服務器:
+;   pm.max_children = 100
+;   pm.start_servers = 30
+;   pm.min_spare_servers = 15
+;   pm.max_spare_servers = 50
+
+; ==============================================
+; 監控命令
+; ==============================================
+
+; 檢查 PHP-FPM 狀態:
+;   curl http://localhost:9000/status
+;   curl http://localhost:9000/status?json
+;
+; 檢查 ping 響應:
+;   curl http://localhost:9000/ping

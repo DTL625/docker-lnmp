@@ -1,0 +1,52 @@
+version: '3'
+services:
+  php-fpm:
+    build:
+      context: services/php-fpm
+      args:
+        PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
+        TZ: "$TZ"
+    container_name: ${COMPOSE_PROJECT_NAME}_php
+    environment:
+      TZ: "$TZ"
+    expose:
+      - 9000
+    volumes:
+      - ${SOURCE_DIR}:/www/:cached
+      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+      - ${LOG_DIR}/php-fpm:/var/log/php
+    restart: always
+    networks:
+      - default
+
+  nginx:
+    build:
+      context: services/nginx
+      args:
+        NGINX_VERSION: nginx:${NGINX_VERSION}
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+    container_name: ${COMPOSE_PROJECT_NAME}_nginx
+    volumes:
+      - ${SOURCE_DIR}:/www:cached
+      - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl:rw
+      - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
+      - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf:ro
+      - ${NGINX_FASTCGI_PHP_CONF}:/etc/nginx/fastcgi-php.conf:ro
+      - ${NGINX_FASTCGI_PARAMS}:/etc/nginx/fastcgi_params:ro
+      - ${LOG_DIR}/nginx:/var/log/nginx/:rw
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+    command: nginx -g 'daemon off;'
+    depends_on:
+      - php-fpm
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
