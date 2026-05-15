@@ -1,0 +1,145 @@
+; ==============================================
+; MUSI Production PHP Configuration
+; 生產環境 PHP 配置示例
+; ==============================================
+
+; 這些設置應添加到或覆蓋主 php.ini 文件中
+
+; ==============================================
+; 1. 錯誤報告和日誌
+; ==============================================
+
+; 關閉直接錯誤輸出 (防止暴露敏感信息)
+display_errors = Off
+display_startup_errors = Off
+
+; 啟用錯誤日誌
+log_errors = On
+error_log = /var/log/php/error.log
+log_errors_max_len = 1024
+
+; 設置錯誤報告級別 (生產環境應報告所有錯誤)
+error_reporting = E_ALL
+
+; 日期時區
+date.timezone = Asia/Taipei
+
+; ==============================================
+; 2. 性能優化 - OPCache
+; ==============================================
+
+[opcache]
+; 啟用 OPCache
+opcache.enable = 1
+
+; OPCache 內存大小 (MB)
+opcache.memory_consumption = 256
+
+; 字符串共享緩衝區大小 (MB)
+opcache.interned_strings_buffer = 16
+
+; 最大加速文件數量
+opcache.max_accelerated_files = 10000
+
+; 重新驗證間隔 (秒)，0 表示檢查文件是否修改
+opcache.revalidate_freq = 60
+
+; 快速檢查：如果啟用，只有在修改時間改變時才檢查
+opcache.fast_shutdown = 1
+
+; 是否在 PHP 啟動時加載代碼到內存中
+opcache.preload_user = www-data
+
+; ==============================================
+; 3. 內存和執行限制
+; ==============================================
+
+; PHP 進程內存限制
+memory_limit = 512M
+
+; 最大執行時間 (秒)
+max_execution_time = 300
+
+; 最大輸入時間 (秒)
+max_input_time = 300
+
+; ==============================================
+; 4. 文件上傳
+; ==============================================
+
+; 允許文件上傳
+file_uploads = On
+
+; 上傳臨時目錄
+upload_tmp_dir = /tmp
+
+; 最大上傳文件大小
+upload_max_filesize = 100M
+
+; POST 最大數據大小 (應 >= upload_max_filesize)
+post_max_size = 100M
+
+; ==============================================
+; 5. 會話配置
+; ==============================================
+
+session.save_handler = files
+session.save_path = /tmp
+session.name = MUSI_SESSION
+session.auto_start = 0
+session.use_cookies = 1
+session.use_only_cookies = 1
+session.cookie_secure = 1
+session.cookie_httponly = 1
+session.cookie_samesite = Lax
+session.cookie_lifetime = 0
+session.gc_maxlifetime = 1440
+
+; ==============================================
+; 6. 安全設置
+; ==============================================
+
+; 禁用某些危險函數
+disable_functions = exec,passthru,shell_exec,system,proc_open,popen,curl_exec,curl_multi_exec,parse_ini_file,show_source
+
+; 禁用的類
+disable_classes =
+
+; 限制資源訪問
+open_basedir = /www:/tmp:/var/log:/etc/ssl
+
+; 隱藏 PHP 版本號
+expose_php = Off
+
+; ==============================================
+; 7. 默認字符集
+; ==============================================
+
+default_charset = UTF-8
+
+; ==============================================
+; 8. 擴展配置
+; ==============================================
+
+; Redis 配置 (如果需要)
+; extension = redis.so
+
+; Imagick 配置 (如果需要圖像處理)
+; extension = imagick.so
+
+; ==============================================
+; 9. 其他性能設置
+; ==============================================
+
+; 禁用短標籤 (安全和兼容性)
+short_open_tag = Off
+
+; 提交查詢的長度限制
+max_input_nesting_level = 64
+
+; ==============================================
+; 注意：
+; 1. 某些設置需要重啟 PHP-FPM 才能生效
+; 2. 在修改前建議備份原配置
+; 3. 定期監控 error.log 和 access.log
+; ==============================================

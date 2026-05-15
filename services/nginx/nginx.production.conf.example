@@ -1,0 +1,170 @@
+# ==============================================
+# MUSI Production Nginx Configuration
+# 生產環境 Nginx 配置示例
+# ==============================================
+
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+    # 最大連接數 (根據服務器能力調整)
+    worker_connections 2048;
+
+    # 使用最高效的連接方式
+    use epoll;
+
+    # 一次處理多個連接
+    multi_accept on;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # ==============================================
+    # 日誌配置
+    # ==============================================
+
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    # 性能優化日誌格式
+    log_format performance '$remote_addr - [$time_local] "$request" '
+                           '$status $body_bytes_sent $request_time '
+                           '$upstream_response_time "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+
+    # ==============================================
+    # 性能優化
+    # ==============================================
+
+    # 啟用 sendfile
+    sendfile on;
+
+    # 在 sendfile 時禁用 nagle 算法
+    tcp_nopush on;
+
+    # 啟用 tcp_nodelay
+    tcp_nodelay on;
+
+    # 保活超時時間
+    keepalive_timeout 65;
+
+    # 最大保活請求數
+    keepalive_requests 100;
+
+    # 類型哈希表大小
+    types_hash_max_size 2048;
+    types_hash_bucket_size 64;
+
+    # 服務器名稱哈希表大小
+    server_names_hash_bucket_size 64;
+    server_names_hash_max_size 512;
+
+    # 客戶端哈希表大小
+    client_max_body_size 100M;
+
+    # ==============================================
+    # Gzip 壓縮
+    # ==============================================
+
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+
+    # 最小壓縮大小
+    gzip_min_length 1024;
+
+    # 壓縮級別 (1-9, 9 最高但 CPU 消耗最大)
+    gzip_comp_level 6;
+
+    # 壓縮類型
+    gzip_types text/plain text/css text/xml text/javascript
+               application/x-javascript application/xml+rss
+               application/json application/javascript
+               image/svg+xml;
+
+    # 禁用舊瀏覽器的 gzip
+    gzip_disable "msie6";
+
+    # ==============================================
+    # 安全設置
+    # ==============================================
+
+    # 隱藏 Nginx 版本號
+    server_tokens off;
+
+    # 防止點擊劫持
+    add_header X-Frame-Options "SAMEORIGIN" always;
+
+    # 防止 MIME 嗅探
+    add_header X-Content-Type-Options "nosniff" always;
+
+    # XSS 保護
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # 內容安全策略 (CSP) - 可根據需要調整
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" always;
+
+    # 推薦者政策
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # 功能政策 (Permissions-Policy)
+    add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+
+    # ==============================================
+    # 緩存控制
+    # ==============================================
+
+    # 緩存映射
+    map $sent_http_content_type $expires {
+        default off;
+        text/html epoch;
+        text/css max;
+        application/javascript max;
+        ~image/ max;
+        ~font/ max;
+    }
+
+    # ==============================================
+    # 上游服務器
+    # ==============================================
+
+    upstream php_backend {
+        # 使用最少連接負載均衡
+        least_conn;
+
+        # PHP-FPM 服務器地址
+        server php-fpm:9000;
+
+        # 可添加多個 PHP-FPM 實例進行負載均衡
+        # server php-fpm-2:9000;
+        # server php-fpm-3:9000;
+
+        # 保活連接
+        keepalive 32;
+    }
+
+    # ==============================================
+    # 速率限制
+    # ==============================================
+
+    # 限制每個 IP 的請求速率
+    limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
+    limit_req_zone $binary_remote_addr zone=api:10m rate=5r/s;
+
+    # 限制連接數
+    limit_conn_zone $binary_remote_addr zone=addr:10m;
+    limit_conn addr 10;
+
+    # ==============================================
+    # 虛擬主機配置
+    # ==============================================
+
+    # 包含虛擬主機配置文件
+    include /etc/nginx/conf.d/*.conf;
+}
