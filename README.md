@@ -59,6 +59,9 @@
 
     # （optinal）使用 -f參數以指定 yml檔設定，以 elk為例;
     docker-compose -f docker-composer-elk.yml up -d 
+
+    # （optinal）啟動 metabase（含其所需的 postgres 資料庫）
+    docker-compose -f docker-compose-metabase.yml up -d
     ```
 
 4. 使用瀏覽器訪問`http://localhost`(或https)就能看到效果，相關配置與原始碼存在放：

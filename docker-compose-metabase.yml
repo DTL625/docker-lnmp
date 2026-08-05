@@ -1,0 +1,45 @@
+version: '3'
+services:
+  # Metabase 應用資料庫（Metabase 需要一個外部資料庫存放設定/查詢等資料）
+  metabase-db:
+    image: postgres:${METABASE_DB_VERSION}
+    container_name: metabase-db
+    environment:
+      POSTGRES_DB: "${METABASE_DB_NAME}"
+      POSTGRES_USER: "${METABASE_DB_USER}"
+      POSTGRES_PASSWORD: "${METABASE_DB_PASSWORD}"
+      TZ: "$TZ"
+    volumes:
+      - ${DATA_DIR}/metabase-db:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${METABASE_DB_USER} -d ${METABASE_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
+  metabase:
+    image: metabase/metabase:${METABASE_VERSION}
+    container_name: metabase
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: "${METABASE_DB_NAME}"
+      MB_DB_PORT: 5432
+      MB_DB_USER: "${METABASE_DB_USER}"
+      MB_DB_PASS: "${METABASE_DB_PASSWORD}"
+      MB_DB_HOST: metabase-db
+      TZ: "$TZ"
+    depends_on:
+      metabase-db:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "${METABASE_HOST_PORT}:3000"
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
